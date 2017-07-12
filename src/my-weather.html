@@ -1,0 +1,84 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-weather">
+    <template>
+
+        <style include="shared-styles">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+        </style>
+
+        <iron-ajax 
+            auto
+            url="{{url}}"
+            handle-as="json"
+            on-response="handleResponse"
+            id="xhr" >
+        </iron-ajax>
+    
+       <div class="card">
+            <h1>Weather</h1>
+            <paper-input label="City" on-change=updateURL value="{{city}}"></paper-input>
+            <paper-input label="County code" on-change=updateURL value="{{country}}"></paper-input>
+            <paper-input label="Language" on-change=updateURL value="{{language}}"></paper-input>
+            <p>[[response]]</p>
+        </div>
+        </template>
+
+    
+    <script>
+        Polymer({
+            
+            is: 'my-weather',
+
+            properties: {
+                city: String,
+                country: String,
+                language: {
+                    type: String,
+                    value: "en",
+                },
+                baseURL: {
+                    type: String,
+                    value: "http://api.openweathermap.org/data/2.5/weather",
+                    readOnly: true
+                },
+                metric: {
+                    type: String,
+                    value: "&units=metric",
+                    readOnly: true
+                },
+                key: {
+                    type: String,
+                    value: "&appid=f9a2266dcb5a5577dcb3efa7dde67a5a",
+                    readOnly: true
+                },
+                url: String,
+                response: String
+            },
+
+            handleResponse(r) {
+                let temp = r.detail.response.main.temp;
+                let weather = r.detail.response.weather[0];
+                this.response = temp + " °C, " + weather.description;
+            },            
+
+            updateURL() {
+                if (this.city.length > 0) {
+                    this.url = this.baseURL + "?q=" + this.city; 
+                    if (this.country) this.url += "," + this.country 
+                    if (this.language) this.url += "&lang=" + this.language 
+                    this.url += this.metric + this.key;
+                } else {
+                    this.response = "";
+                }
+
+            }
+        });
+    </script>
+</dom-module>
