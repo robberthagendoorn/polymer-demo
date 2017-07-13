@@ -14,21 +14,20 @@
         </style>
 
         <iron-ajax 
-            auto
-            url="{{url}}"
+            url="[[url]]"
             handle-as="json"
-            on-response="handleResponse"
+            on-response="_displayWeather"
             id="xhr" >
         </iron-ajax>
     
-       <div class="card">
+        <div class="card">
             <h1>Weather</h1>
-            <paper-input label="City" on-change=updateURL value="{{city}}"></paper-input>
-            <paper-input label="County code" on-change=updateURL value="{{country}}"></paper-input>
-            <paper-input label="Language" on-change=updateURL value="{{language}}"></paper-input>
+            <paper-input label="City" on-change=_callXhr value="{{city}}"></paper-input>
+            <paper-input label="Country" on-change=_callXhr value="{{country}}"></paper-input>
+            <paper-input label="Language" on-change=_callXhr value="{{language}}"></paper-input>
             <p>[[response]]</p>
         </div>
-        </template>
+    </template>
 
     
     <script>
@@ -38,7 +37,10 @@
 
             properties: {
                 city: String,
-                country: String,
+                country: {
+                    type: String,
+                    observer: "_updateCountryComplete"
+                },
                 language: {
                     type: String,
                     value: "en",
@@ -58,27 +60,41 @@
                     value: "&appid=f9a2266dcb5a5577dcb3efa7dde67a5a",
                     readOnly: true
                 },
-                url: String,
+                url: {
+                    type: String,
+                    value: null,
+                    computed: "_updateURL(city, country, language)",
+                },
                 response: String
             },
 
-            handleResponse(r) {
+            _displayWeather(r) {
                 let temp = r.detail.response.main.temp;
                 let weather = r.detail.response.weather[0];
                 this.response = temp + " °C, " + weather.description;
             },            
 
-            updateURL() {
-                if (this.city.length > 0) {
-                    this.url = this.baseURL + "?q=" + this.city; 
-                    if (this.country) this.url += "," + this.country 
-                    if (this.language) this.url += "&lang=" + this.language 
-                    this.url += this.metric + this.key;
-                } else {
-                    this.response = "";
+            _updateURL(city, country, language) {
+                let url = "";
+                if (city) {
+                    url = this.baseURL + "?q=" + city; 
+                    if (country) url += "," + country 
+                    if (language) url += "&lang=" + language 
+                    url += this.metric + this.key;
                 }
+                return url;
+            },
+
+            _callXhr() {
+                if (this.url) {
+                    this.$.xhr.generateRequest();
+                }
+            },
+
+            _updateCountryComplete() {
 
             }
+
         });
     </script>
 </dom-module>
