@@ -1,6 +1,7 @@
-<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/vaadin-combo-box/vaadin-combo-box.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-weather">
@@ -19,11 +20,25 @@
             on-response="_displayWeather"
             id="xhr" >
         </iron-ajax>
+
+        <iron-ajax
+            url="https://restcountries.eu/rest/v2/all"
+            handle-as="json"
+            on-response="_updateCountryList"
+            id="cxhr" >
+        </iron-ajax>
     
         <div class="card">
             <h1>Weather</h1>
             <paper-input label="City" on-change=_callXhr value="{{city}}"></paper-input>
-            <paper-input label="Country" on-change=_callXhr value="{{country}}"></paper-input>
+            <vaadin-combo-box 
+                label="Country" 
+                on-change=_callXhr 
+                items="[[countryList]]" 
+                item-label-path= "name"
+                item-value-path= "alpha2Code"
+                value="{{country}}">
+                </vaadin-combo-box>
             <paper-input label="Language" on-change=_callXhr value="{{language}}"></paper-input>
             <p>[[response]]</p>
         </div>
@@ -37,10 +52,7 @@
 
             properties: {
                 city: String,
-                country: {
-                    type: String,
-                    observer: "_updateCountryComplete"
-                },
+                country: String,
                 language: {
                     type: String,
                     value: "en",
@@ -65,7 +77,12 @@
                     value: null,
                     computed: "_updateURL(city, country, language)",
                 },
-                response: String
+                response: String,
+                countryList: Array  
+            },
+
+            attached: function() {
+                this.$.cxhr.generateRequest();
             },
 
             _displayWeather(r) {
@@ -91,10 +108,15 @@
                 }
             },
 
-            _updateCountryComplete() {
+            _callCountryXhr() {
+              if (this.countryUrl) {
+                  this.$.cxhr.generateRequest();
+              }   
+            },
 
-            }
-
+            _updateCountryList(r) {
+                this.countryList = r.detail.response;
+            },
         });
     </script>
 </dom-module>
